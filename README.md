@@ -1,159 +1,148 @@
-# Password Security Lab 🔐
-### Password Strength Analyzer and Controlled Password Cracking Demonstration
+# Password Strength Analyzer 🔐
 
-> **Academic project for a Computer Security course.**  
-> All demonstrations are LOCAL ONLY and use locally generated test data.  
-> Do NOT use any part of this code against real accounts or systems.
+Production-safe web app + CLI for password strength analysis, built from the original academic project.
 
----
+## What this project is
 
-## Project Overview
+This repository provides:
 
-This project studies password security through two complementary tools:
+- **Web app (public deploy)**: password strength analysis only
+- **CLI (local academic usage)**: analyzer plus optional classroom demos
 
-1. **Password Strength Analyzer** — evaluates a password and explains *why* it is weak or strong.
-2. **Controlled Cracking Demo** — shows, in a safe classroom environment, how brute-force and dictionary attacks work on locally generated hashes.
+The core scoring logic is reused from `src/analyzer.py` (not reimplemented separately for web).
 
----
+## Public web version scope
 
-## Folder Structure
+The public deployment exposes only:
 
-```
+- `GET /api/health`
+- `POST /api/analyze`
+- static single-page UI in `public/`
+
+It does **not** expose brute-force, dictionary attack, hashing demo, or experiment runner routes/pages.
+
+## Local-only / academic-only scope
+
+These remain local CLI/academic features and are not part of public web deployment:
+
+- `python main.py --demo`
+- `python main.py --crack "..."`
+- `python main.py --brute "..."`
+- `python experiments/run_experiments.py`
+
+## Privacy and safety boundary
+
+- Passwords are analyzed transiently per request.
+- Password values are not written to files/databases by the web app.
+- No password analytics or storage is used in the frontend.
+- No third-party services are called with password data.
+- Cracking demos are local educational tooling and not publicly deployed.
+
+## Project structure
+
+```text
 password-strength-analyzer/
-├── main.py                          # Main entry point (CLI)
-├── requirements.txt                 # Python dependencies
-├── README.md
+├── app.py                     # FastAPI entrypoint for web/API
+├── public/
+│   ├── index.html             # Web UI
+│   ├── style.css              # UI styling
+│   └── app.js                 # UI behavior, calls /api/analyze
+├── main.py                    # Existing CLI entrypoint
 ├── src/
-│   ├── __init__.py
-│   ├── analyzer.py                  # Password strength analyzer
-│   ├── dictionary_checker.py        # Common-password & wordlist checker
-│   ├── password_generator.py        # Sample password generator
-│   ├── hasher.py                    # SHA-256 / bcrypt hashing helpers
-│   ├── brute_force.py               # Brute-force attack demo (≤6 chars)
-│   ├── dictionary_attack.py         # Dictionary attack demo
-│   └── logger.py                    # Console & file result logger
+│   ├── analyzer.py            # Core scoring logic (reused by API + CLI)
+│   ├── dictionary_checker.py  # Word/common-password checks
+│   ├── dictionary_attack.py   # Local-only educational demo
+│   ├── brute_force.py         # Local-only educational demo
+│   └── ...
 ├── data/
-│   ├── common_passwords.txt         # List of well-known weak passwords
-│   └── wordlist.txt                 # English dictionary wordlist
-└── experiments/
-    └── run_experiments.py           # Full experiment suite
+│   ├── common_passwords.txt
+│   └── wordlist.txt
+├── requirements.txt
+└── vercel.json
 ```
 
----
+## Local development
 
-## Requirements
-
-- Python 3.10+
-- `bcrypt` (optional — only required for bcrypt hashing demo)
+### 1) Install dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
----
+### 2) Run the web app locally
 
-## Quick Start
+```bash
+uvicorn app:app --reload
+```
 
-### Interactive Mode (default)
+### 3) Open in browser
+
+`http://127.0.0.1:8000`
+
+## API contract
+
+### Health
+
+- **GET** `/api/health`
+- Example response:
+
+```json
+{ "ok": true, "service": "password-strength-analyzer" }
+```
+
+### Analyze
+
+- **POST** `/api/analyze`
+- Request body:
+
+```json
+{ "password": "MyP@ssw0rd!" }
+```
+
+- Response shape:
+
+```json
+{
+  "score": 84,
+  "label": "Very Strong",
+  "reasons": ["..."],
+  "suggestions": ["..."],
+  "details": { "length_score": 22.5 }
+}
+```
+
+Validation rules:
+
+- missing/invalid/empty password: HTTP 400
+- maximum password length: 256 chars
+
+## CLI compatibility
+
+Existing CLI flow is kept:
+
 ```bash
 python main.py
-```
-Type any password and get an instant strength report.
-
-### Analyze a Single Password
-```bash
-python main.py --analyze "MyP@ssw0rd!"
-```
-
-### Run the Full Experiment Demo
-```bash
+python main.py --analyze "MyP@ss1!"
 python main.py --demo
-# or
-python experiments/run_experiments.py
-```
-
-### Dictionary Attack Demo (educational)
-```bash
 python main.py --crack "password"
-```
-
-### Brute-Force Demo (educational, ≤ 6 characters only)
-```bash
 python main.py --brute "abc"
 ```
 
----
+## Vercel deployment
 
-## How the Analyzer Works
+### Deploy steps
 
-The analyzer scores a password from **0 to 100** across five dimensions:
+1. Push this repository to GitHub.
+2. In Vercel, click **New Project** and import the repo.
+3. Keep project root as repository root.
+4. Deploy (the included `vercel.json` routes `/api/*` to `app.py` and serves `public/`).
 
-| Dimension         | Max Points | What it measures                              |
-|-------------------|-----------|-----------------------------------------------|
-| Length            | 30        | Longer passwords are exponentially harder to crack |
-| Diversity         | 25        | Mix of lower, upper, digits, symbols           |
-| Entropy           | 20        | Shannon-like bits of randomness                |
-| Pattern penalty   | 15        | Deducted for `abc`, `123`, `qwerty`, repeats  |
-| Dictionary penalty| 10        | Deducted for common/dictionary passwords       |
+After deploy:
 
-**Strength labels:**
+- Web UI: `/`
+- Health: `/api/health`
+- Analyzer endpoint: `/api/analyze`
 
-| Score  | Label       |
-|--------|-------------|
-| 0–19   | Very Weak   |
-| 20–39  | Weak        |
-| 40–59  | Medium      |
-| 60–79  | Strong      |
-| 80–100 | Very Strong |
+## Notes on file-path reliability
 
----
-
-## Sample Output
-
-```
-  Password : 'password'
-  Score    : 3/100
-  Strength : Very Weak
-  Entropy  : 37.6 bits (charset size ≈ 26)
-  Reasons  :
-    • Password is too short (8 characters).
-    • Missing character types: uppercase letters, digits, special characters.
-    • Estimated entropy: 37.6 bits (charset size ≈ 26).
-    • This is a well-known common password — very easy to guess.
-  Suggestions :
-    → Use at least 8 characters; 12+ is recommended.
-    → Add uppercase letters, digits, special characters (e.g. !@#$) to increase complexity.
-    → Avoid dictionary words, common passwords, and simple substitutions.
-```
-
----
-
-## Ethical Statement
-
-This project is created for **educational purposes only** within a controlled academic setting.
-
-- ✅ All attacks run against **locally generated, sample hashes only**.
-- ✅ No real user accounts, databases, or online services are targeted.
-- ✅ The brute-force demo is intentionally limited to **≤ 6 characters**.
-- ❌ Do NOT use this code against any system without explicit written permission.
-- ❌ Unauthorized password cracking is **illegal** in most jurisdictions.
-
----
-
-## Modules
-
-| Module | Purpose |
-|--------|---------|
-| `analyzer.py` | Core strength scoring logic |
-| `dictionary_checker.py` | Loads and queries password/word lists |
-| `password_generator.py` | Provides sample passwords for testing |
-| `hasher.py` | SHA-256 and bcrypt hashing helpers |
-| `brute_force.py` | Exhaustive brute-force demo (safety-capped) |
-| `dictionary_attack.py` | Wordlist-based offline attack demo |
-| `logger.py` | Formatted console output and file logging |
-
----
-
-## License
-
-For academic and educational use only.
+Wordlist/common-password loading uses `pathlib` paths resolved from module location (`src/dictionary_checker.py`), so it works in local CLI and serverless/runtime environments regardless of current working directory.
