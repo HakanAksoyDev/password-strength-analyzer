@@ -15,22 +15,26 @@
           and common-pattern checks.
         </p>
 
-        <label for="password">Password</label>
-        <div class="input-row">
-          <input
-            id="password"
-            type="password"
-            autocomplete="off"
-            autocapitalize="off"
-            spellcheck="false"
-            placeholder="Enter a password"
-          />
-          <button id="togglePassword" type="button" class="secondary">
-            Show
-          </button>
-        </div>
+        <form id="analyzeForm" novalidate>
+          <label for="password">Password</label>
+          <div class="input-row">
+            <input
+              id="password"
+              type="password"
+              autocomplete="off"
+              autocapitalize="off"
+              spellcheck="false"
+              placeholder="Enter a password"
+              maxlength="256"
+              aria-describedby="status error"
+            />
+            <button id="togglePassword" type="button" class="secondary">
+              Show
+            </button>
+          </div>
 
-        <button id="analyzeBtn" type="button" class="primary">Analyze</button>
+          <button id="analyzeBtn" type="submit" class="primary">Analyze</button>
+        </form>
 
         <p id="status" class="status" aria-live="polite"></p>
         <p id="error" class="error" aria-live="assertive"></p>
