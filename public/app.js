@@ -1,3 +1,4 @@
+const analyzeForm = document.getElementById("analyzeForm");
 const passwordInput = document.getElementById("password");
 const togglePasswordBtn = document.getElementById("togglePassword");
 const analyzeBtn = document.getElementById("analyzeBtn");
@@ -9,6 +10,7 @@ const labelValueEl = document.getElementById("labelValue");
 const strengthBar = document.getElementById("strengthBar");
 const reasonsList = document.getElementById("reasonsList");
 const suggestionsList = document.getElementById("suggestionsList");
+let isAnalyzing = false;
 
 function clearMessages() {
   statusEl.textContent = "";
@@ -69,19 +71,29 @@ togglePasswordBtn.addEventListener("click", () => {
   togglePasswordBtn.textContent = showing ? "Show" : "Hide";
 });
 
-analyzeBtn.addEventListener("click", async () => {
+passwordInput.addEventListener("input", clearMessages);
+
+analyzeForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (isAnalyzing) return;
+
+  isAnalyzing = true;
   clearMessages();
   clearResult();
 
   const password = passwordInput.value;
   if (password.length === 0) {
     errorEl.textContent = "Please enter a password.";
+    isAnalyzing = false;
     return;
   }
 
   analyzeBtn.disabled = true;
+  togglePasswordBtn.disabled = true;
+  passwordInput.disabled = true;
   analyzeBtn.textContent = "Analyzing...";
   statusEl.textContent = "Analyzing password strength...";
+  resultCard.setAttribute("aria-busy", "true");
 
   try {
     const response = await fetch("/api/analyze", {
@@ -100,12 +112,18 @@ analyzeBtn.addEventListener("click", async () => {
     }
 
     renderResult(payload);
+    errorEl.textContent = "";
     statusEl.textContent = "Analysis complete.";
   } catch (error) {
     errorEl.textContent =
       error instanceof Error ? error.message : "Request failed.";
+    statusEl.textContent = "";
   } finally {
+    isAnalyzing = false;
     analyzeBtn.disabled = false;
+    togglePasswordBtn.disabled = false;
+    passwordInput.disabled = false;
     analyzeBtn.textContent = "Analyze";
+    resultCard.setAttribute("aria-busy", "false");
   }
 });

@@ -98,8 +98,8 @@ def experiment_brute_force() -> list[dict]:
     print_header("EXPERIMENT 3 — Brute-Force Attack Demo (≤ 4 chars)")
     print("  ⚠  Educational demo only — limited to 4-character passwords.\n")
 
-    # Use only the very short very_weak samples for brute force
-    targets = SAMPLE_PASSWORDS["very_weak"]  # all ≤ 6 chars
+    # Use only very_weak samples that match the ≤4-character demo scope
+    targets = [pwd for pwd in SAMPLE_PASSWORDS["very_weak"] if len(pwd) <= 4]
     results = demo_brute_force(targets, max_length=4)
 
     rows = []

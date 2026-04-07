@@ -136,6 +136,7 @@ def analyze(password: str) -> dict:
         suggestions.append(
             "Try a passphrase: combine several random words with numbers and symbols."
         )
+    suggestions = list(dict.fromkeys(suggestions))
 
     return {
         "score":       score,

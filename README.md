@@ -135,7 +135,7 @@ python main.py --brute "abc"
 1. Push this repository to GitHub.
 2. In Vercel, click **New Project** and import the repo.
 3. Keep project root as repository root.
-4. Deploy (the included `vercel.json` routes `/api/*` to `app.py` and serves `public/`).
+4. Deploy (the included `vercel.json` routes all requests to `app.py`; FastAPI serves `/`, `/style.css`, `/app.js`, `/api/health`, and `/api/analyze`).
 
 After deploy:
 

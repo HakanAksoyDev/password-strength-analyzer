@@ -4,8 +4,10 @@ FastAPI web entrypoint for password strength analysis.
 
 from pathlib import Path
 
-from fastapi import Body, FastAPI, HTTPException, Request
-from fastapi.responses import FileResponse
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import FileResponse, JSONResponse
+from pydantic import BaseModel, ConfigDict, StrictStr
 
 from src.analyzer import analyze
 
@@ -14,6 +16,11 @@ BASE_DIR = Path(__file__).resolve().parent
 PUBLIC_DIR = BASE_DIR / "public"
 
 app = FastAPI(title="password-strength-analyzer")
+
+
+class AnalyzeRequest(BaseModel):
+    password: StrictStr
+    model_config = ConfigDict(extra="forbid")
 
 
 @app.middleware("http")
@@ -28,16 +35,31 @@ async def add_response_headers(request: Request, call_next):
     return response
 
 
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(
+    request: Request, exc: RequestValidationError
+) -> JSONResponse:
+    detail = "Invalid request body."
+    for err in exc.errors():
+        loc = err.get("loc", ())
+        err_type = err.get("type", "")
+        if "password" in loc and err_type == "missing":
+            detail = "`password` is required."
+            break
+        if "password" in loc and err_type in {"string_type", "string_sub_type"}:
+            detail = "`password` must be a string."
+            break
+    return JSONResponse(status_code=400, content={"detail": detail})
+
+
 @app.get("/api/health")
 def health() -> dict:
     return {"ok": True, "service": "password-strength-analyzer"}
 
 
 @app.post("/api/analyze")
-def analyze_password(payload: dict = Body(...)) -> dict:
-    password = payload.get("password")
-    if not isinstance(password, str):
-        raise HTTPException(status_code=400, detail="`password` must be a string.")
+def analyze_password(payload: AnalyzeRequest) -> dict:
+    password = payload.password
     if password == "":
         raise HTTPException(status_code=400, detail="`password` must not be empty.")
     if len(password) > MAX_PASSWORD_LENGTH:
