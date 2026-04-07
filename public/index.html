@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Password Strength Analyzer</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <main class="container">
+      <section class="card">
+        <h1>Password Strength Analyzer</h1>
+        <p class="subtitle">
+          Analyze password strength using length, character diversity, entropy,
+          and common-pattern checks.
+        </p>
+
+        <label for="password">Password</label>
+        <div class="input-row">
+          <input
+            id="password"
+            type="password"
+            autocomplete="off"
+            autocapitalize="off"
+            spellcheck="false"
+            placeholder="Enter a password"
+          />
+          <button id="togglePassword" type="button" class="secondary">
+            Show
+          </button>
+        </div>
+
+        <button id="analyzeBtn" type="button" class="primary">Analyze</button>
+
+        <p id="status" class="status" aria-live="polite"></p>
+        <p id="error" class="error" aria-live="assertive"></p>
+
+        <section id="resultCard" class="result hidden" aria-live="polite">
+          <div class="result-top">
+            <div class="score-block">
+              <span class="label">Score</span>
+              <strong id="scoreValue">0</strong>
+              <span>/100</span>
+            </div>
+            <div class="label-block">
+              <span class="label">Strength</span>
+              <strong id="labelValue">-</strong>
+            </div>
+          </div>
+
+          <div class="bar-wrap">
+            <div id="strengthBar" class="bar"></div>
+          </div>
+
+          <div class="list-block">
+            <h2>Reasons</h2>
+            <ul id="reasonsList"></ul>
+          </div>
+
+          <div class="list-block">
+            <h2>Suggestions</h2>
+            <ul id="suggestionsList"></ul>
+          </div>
+        </section>
+
+        <p class="privacy-note">
+          Privacy: your password is analyzed transiently for this request and is
+          not stored.
+        </p>
+      </section>
+    </main>
+
+    <script src="/app.js"></script>
+  </body>
+</html>

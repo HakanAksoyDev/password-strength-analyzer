@@ -5,26 +5,26 @@ Loads a list of common passwords and a general dictionary wordlist, then
 provides two lookup functions used by the analyzer.
 """
 
-import os
+from pathlib import Path
 
 # ---------------------------------------------------------------------------
 # Resolve paths relative to this file so the package works from any CWD
 # ---------------------------------------------------------------------------
-_BASE_DIR    = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-_COMMON_FILE = os.path.join(_BASE_DIR, "data", "common_passwords.txt")
-_WORDS_FILE  = os.path.join(_BASE_DIR, "data", "wordlist.txt")
+_BASE_DIR    = Path(__file__).resolve().parent.parent
+_COMMON_FILE = _BASE_DIR / "data" / "common_passwords.txt"
+_WORDS_FILE  = _BASE_DIR / "data" / "wordlist.txt"
 
 
-def _load_set(filepath: str) -> set:
+def _load_set(filepath: Path) -> set[str]:
     """Load a text file (one entry per line) into a lowercase set."""
     entries = set()
     try:
-        with open(filepath, "r", encoding="utf-8") as fh:
+        with filepath.open("r", encoding="utf-8") as fh:
             for line in fh:
                 word = line.strip().lower()
                 if word:
                     entries.add(word)
-    except FileNotFoundError:
+    except OSError:
         pass   # Gracefully degrade if file is missing
     return entries
 
